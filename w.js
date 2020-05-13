@@ -92,18 +92,6 @@ class Identifier {
     }
 }
 
-// May not need these
-class ASTBoolean {
-
-}
-
-class ASTNumber {
-
-}
-
-class ASTString {
-
-}
 
 /*
     Our JS Types
@@ -291,7 +279,7 @@ function AlgorithmW(node, gamma, nonGenerics = []) {
 // Makes a copy of a type expression
 // Smallshire uses a secondary recursive function.
 // I think we can just make fresh recursive by passing in mapping
-// and instantiating it if it does not exist
+// and instantiating mapping if it does not exist
 function fresh(typeA, nonGenerics, mapping) {
     // Maps Variable to Variable
     if (mapping == null) {
@@ -303,10 +291,12 @@ function fresh(typeA, nonGenerics, mapping) {
         // and if A is a generic
         if (isGeneric(prunedType, nonGenerics)) {
             // And we have not yet mapped A
-            if (!mapping[prunedType]) {
-                mapping[prunedType] = new Variable();
+            // Should we be mapping prunedType or prunedType.id?
+            // id makes more sense to me, but if it breaks, reconsider
+            if (!mapping[prunedType.id]) {
+                mapping[prunedType.id] = new Variable();
             }
-            return mapping[prunedType]
+            return mapping[prunedType.id]
         }
         // if A is not generic
         else {
@@ -314,11 +304,38 @@ function fresh(typeA, nonGenerics, mapping) {
         }
     }
     else if (prunedType instanceof Type) {
-        return Type(prunedType.name, prunedType.types.map( type => {
+        return new Type(prunedType.name, prunedType.types.map( type => {
             fresh(type, nonGenerics, mapping);
         }));
     }
-    
+}
+
+// typeA should be pruned prior to checking whether it is Generic
+function isGeneric(typeA, nonGenerics) {
+    return !inTypeArray(typeA, nonGenerics);
+}
+
+// Equivalent to Smallshire's occurs_in, but not nearly as nice
+function occursInTypeArray(typeA,typeArray) {
+    //check each type in array to see whether it contains typeA
+    const hasTypeA = typeArray.map(typeB => {
+        // Watch this for mutual recursion
+        return occursInType(typeA, typeB);
+    });
+    return hasTypeA.include(typeA);
+}
+
+// Check to see if type variable v occurs in typeB
+function occursInType(v, typeB) {
+    prunedB = prune(typeB);
+    if (v == prunedB) {
+        return true;
+    }
+    else if (prunedB instanceof Type) {
+        // Watch this for mutual recursion.
+        return occursInTypeArray(v, prunedB.types)
+    }
+    return false;
 }
 
 function unify(typeA, typeB) {
@@ -368,13 +385,6 @@ function unify(typeA, typeB) {
     }
 }
 
-// Extract the type of name from gamma
-function getType(name, gamma, nonGenerics) {
-    if ()
-}
-
-
-
 // Return the currently defining instance of typeA
 // Also removes all the instantiated variables in the chain, hence the name
 function prune(typeA) {
@@ -385,8 +395,13 @@ function prune(typeA) {
     }
     return typeA;
 }
- 
-function convertNodeToPrimitiveType(node) {
+
+// Not a huge fan of this name
+function getType(name, gamma, nonGenerics) {
+    // If the name exists in gamma, return the associated type
+    if (gamma[name]) {
+        return fresh(gamma[name], nonGenerics);
+    }
     switch (type.name) {
         case 'Boolean':
             return new Boolean();
