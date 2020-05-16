@@ -168,17 +168,19 @@ class Type {
     }
 
     toString() {
-        const typeCount = types.length
-        let typeString = '';
-        // If we have types in the array, we want to convert each of them to a string 
+        const typeCount = this.types.length
+        // If there are no child types, just return the name
         if (typeCount === 0)
         {
             return this.name
         }
+        const paramTypes = this.types.slice(0,typeCount - 1);
+        // If we have types in the array, we want to convert each of them to a string 
         // Map toString over our types array, then join them with separating spaces
-        const typeStrings = this.types.map(type => type.toString()).join(' ');
-        // Join the resulting strings with a separating space.
-        return this.name() + ' ' + typeStrings; 
+        const paramTypeStrings = paramTypes.map(type => type.toString()).join(' ');
+        const resultTypeString = this.types[typeCount - 1].toString();
+        // Join the resulting strings with the function "name" (->)
+        return '(' + paramTypeStrings + this.name +  resultTypeString + ')'; 
     }
 }
 
@@ -209,7 +211,7 @@ class Str extends Type {
 // We can then chain these functions to achieve multiple input types
 class Function extends Type {
     constructor(types) {
-        super("Function", types);
+        super('->', types);
     }
 }
 
@@ -241,8 +243,8 @@ function AlgorithmW(node, gamma, nonGenerics) {
         }
         // Stick a type variable at the end for the return type
         // Note the use of var here: unify will update fcnType
-        fcnType = new Variable();
-        signatureTypes.push(fcnType);
+        var resultType = new Variable();
+        signatureTypes.push(resultType);
         unify(new Function(signatureTypes), fcnType);
         return fcnType;
     }
@@ -253,6 +255,7 @@ function AlgorithmW(node, gamma, nonGenerics) {
         // We're going to copy nonGeneric since I suspect it may have scoping issues.
         // If it breaks, reconsider
         let newNonG = new Set(nonGenerics);
+        let delta = JSON.parse(JSON.stringify(gamma));
         // If we want to parse let and const, we may want to copy gamma too
         // let delta = {...gamma};
         let signatureTypes = [];
@@ -264,8 +267,8 @@ function AlgorithmW(node, gamma, nonGenerics) {
         if (node.body.length) {
             node.body.forEach(arg => {
                 argType = new Variable();
-                newNonG.push(argType);
-                gamma[arg.v] = argType;
+                newNonG.add(argType);
+                delta[arg.v] = argType;
                 signatureTypes.push(argType);
             });
         } else {
@@ -342,7 +345,7 @@ function occursInTypeArray(typeA,typeArray) {
         // Watch this for mutual recursion
         return occursInType(typeA, typeB);
     });
-    return hasTypeA.some( x => x);
+    return hasTypeA.includes(true);
 }
 
 // Check to see if type variable v occurs in typeB
@@ -431,8 +434,9 @@ function getType(name, gamma, nonGenerics) {
 
 
 let x = new Identifier("5");
-console.log(AlgorithmW(x), {});
+console.log(AlgorithmW(x, {}).toString());
 
-x = new FunctionDefinition("f", new FunctionDefinition("g", new FunctionDefinition("arg", new FunctionCall(new Identifier("g"), new FunctionCall(new Identifier("f"), new Identifier("arg"))))))
-console.log(AlgorithmW(x), {});
+//x = new FunctionDefinition("f", new FunctionDefinition("g", new FunctionDefinition("arg", new FunctionCall(new Identifier("g"), new FunctionCall(new Identifier("f"), new Identifier("arg"))))))
+x = new FunctionDefinition('f', new Identifier('5'));
+console.log(AlgorithmW(x, {}).toString());
 

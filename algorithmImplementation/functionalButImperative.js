@@ -401,7 +401,7 @@ function occursInTypeArray(typeA,typeArray) {
         // Watch this for mutual recursion
         return occursInType(typeA, typeB);
     });
-    return hasTypeA.includes(typeA);
+    return hasTypeA.includes(true);
 }
 
 // Check to see if type variable v occurs in typeB
