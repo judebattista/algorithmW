@@ -20,17 +20,11 @@ export const iterateCode = () => {
                 resultList.push(parseObject(entry));
             });
             // concatenates all the results found into a string 
-            let code = getParseString(resultList); 
-            console.log(code);
-            debugger;
-            // eval("var f = " + code + ";");
-            eval("5+5");
-            // eval(code);
-            let string =`import { AlgorithmW } from './algorithmW';import { FunctionDefinition } from './algorithmW';import { FunctionCall } from './algorithmW';import { Identifier } from './algorithmW';`
-            code = "var f = " + code + ";";
-            var f;
-            eval(string + code);
-            var x = AlgorithmW(f, {}, []);
+            var code = new FunctionDefinition("f", [new FunctionDefinition("g", [new FunctionDefinition("arg", [new FunctionCall(new Identifier("g"), new FunctionCall(new Identifier("f"), new Identifier("arg")))])])]);
+            if (resultList[0][0] == "FunctionDefinition") {
+                code =  new FunctionDefinition(resultList[0][1], [new Identifier(resultList[0][3])]);
+            }
+            var x = AlgorithmW(code, {}, []);
             console.log(x.toString());
         } else { 
             vscode.window.showWarningMessage("Check Types only works for Javascript. Other languages will not have accurate checking.");
@@ -49,13 +43,13 @@ const parseObject = (entry:Object) => {
         switch(key) {
             case "type":
                 if (values[iterator] === "FunctionDeclaration") {
-                    tokens.push("new FunctionDefinition('");
+                    tokens.push("FunctionDefinition");
                 } else if (values[iterator] === "ReturnStatement") {
-                    tokens.push("[new Identifier('");
+                    tokens.push("Identifier");
                 }
                 break; 
             case "id":
-                if (tokens[tokens.length-1] === "new FunctionDefinition('") tokens.push(values[iterator].name + "',");
+                if (tokens[tokens.length-1] === "FunctionDefinition") tokens.push(values[iterator].name);
                 break; 
             case "body":
                 let bodySeg = values[iterator].body;
@@ -64,7 +58,7 @@ const parseObject = (entry:Object) => {
                 }
                 break; 
             case "argument":
-                tokens.push(values[iterator].value + "')])");
+                tokens.push(values[iterator].value);
                 break; 
         }
         iterator++; 
@@ -82,4 +76,10 @@ const getParseString = (list:string[][]) => {
     }
     return result; 
 };
+
+const getParseObject = (list:Object[][]) => {
+    if (list[0][0] == "FunctionDefinition") {
+        return new FunctionDefinition(list[0][1], [new Identifier(list[0][3])]);
+    }
+}
 

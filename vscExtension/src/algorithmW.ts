@@ -489,9 +489,9 @@ var var2 = new Variable();
 // console.log(t.toString());
 // console.log(t);
 // var x = AlgorithmW(new FunctionDefinition("x", [new Identifier("x")]));
-var f = new FunctionDefinition("f", [new FunctionDefinition("g", [new FunctionDefinition("arg", [new FunctionCall(new Identifier("g"), new FunctionCall(new Identifier("f"), new Identifier("arg")))])])]);
-var x = AlgorithmW(f, {});
-console.log(x.toString());
+// var f = new FunctionDefinition("f", [new FunctionDefinition("g", [new FunctionDefinition("arg", [new FunctionCall(new Identifier("g"), new FunctionCall(new Identifier("f"), new Identifier("arg")))])])]);
+// var x = AlgorithmW(f, {});
+// console.log(x.toString());
 //  # let g = fn f => 5 in g g
 // Let("g",
 // Lambda("f", Identifier("5")),
