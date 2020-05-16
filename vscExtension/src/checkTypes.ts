@@ -1,7 +1,10 @@
 import * as vscode from 'vscode';
 import * as esprima from 'esprima'; 
 import { ADDRGETNETWORKPARAMS } from 'dns';
-
+import { AlgorithmW } from './algorithmW';
+import { FunctionDefinition } from './algorithmW';
+import { FunctionCall } from './algorithmW';
+import { Identifier } from './algorithmW';
 // iterates over the inputted code and parses it out into the format we want 
 // current implementation is a proof of concept, not a general case 
 export const iterateCode = () => {
@@ -17,7 +20,18 @@ export const iterateCode = () => {
                 resultList.push(parseObject(entry));
             });
             // concatenates all the results found into a string 
-            console.log(getParseString(resultList));
+            let code = getParseString(resultList); 
+            console.log(code);
+            debugger;
+            // eval("var f = " + code + ";");
+            eval("5+5");
+            // eval(code);
+            let string =`import { AlgorithmW } from './algorithmW';import { FunctionDefinition } from './algorithmW';import { FunctionCall } from './algorithmW';import { Identifier } from './algorithmW';`
+            code = "var f = " + code + ";";
+            var f;
+            eval(string + code);
+            var x = AlgorithmW(f, {}, []);
+            console.log(x.toString());
         } else { 
             vscode.window.showWarningMessage("Check Types only works for Javascript. Other languages will not have accurate checking.");
         }
@@ -35,13 +49,13 @@ const parseObject = (entry:Object) => {
         switch(key) {
             case "type":
                 if (values[iterator] === "FunctionDeclaration") {
-                    tokens.push("new Lambda('");
+                    tokens.push("new FunctionDefinition('");
                 } else if (values[iterator] === "ReturnStatement") {
-                    tokens.push("new Identifier('");
+                    tokens.push("[new Identifier('");
                 }
                 break; 
             case "id":
-                if (tokens[tokens.length-1] === "new Lambda('") tokens.push(values[iterator].name + "',");
+                if (tokens[tokens.length-1] === "new FunctionDefinition('") tokens.push(values[iterator].name + "',");
                 break; 
             case "body":
                 let bodySeg = values[iterator].body;
@@ -50,7 +64,7 @@ const parseObject = (entry:Object) => {
                 }
                 break; 
             case "argument":
-                tokens.push(values[iterator].value + "'))");
+                tokens.push(values[iterator].value + "')])");
                 break; 
         }
 
