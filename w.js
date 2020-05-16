@@ -120,7 +120,7 @@ class Identifier {
 class Variable {
     // I think these initializations should happen just one time
     static next_variable_id = 0;
-    static base_variable_name = 'a';
+    static next_variable_name = 'a';
 
     constructor() {
         // Set the id for the instance of the variable
@@ -130,10 +130,10 @@ class Variable {
         Variable.next_variable_id++;
         // The variable is NOT connected to an instance of a type yet
         // Explicitly set it to null to avoid confusion with undefined
-        self.instance = null;
+        this.instance = null;
         // variable has not been associated with an identifier yet.
         // Explicitly set it to null to avoid confusion with undefined.
-        self.name = null;
+        this.name = null;
     }
 
     name() {
@@ -141,7 +141,8 @@ class Variable {
             // This is a clever bit of code from https://stackoverflow.com/questions/12504042/what-is-a-method-that-can-be-used-to-increment-letters
             // I do hope we don't have more than 26 variables though...
             // A possible solution is construct two character strings.
-            return "'" + String.fromCharCode(base_variable_name.charCodeAt(0) + this.id);
+            this.name = Variable.next_variable_name;
+            Variable.next_variable_name = String.fromCharCode(base_variable_name.charCodeAt(0) + this.id);
         } 
     }
 
@@ -194,9 +195,9 @@ class Number extends Type {
     }
 }
 
-class String extends Type {
+class Str extends Type {
     constructor() {
-        super("String", []);
+        super("Str", []);
     }
 }
 
@@ -217,44 +218,62 @@ class Function extends Type {
 // node: root of our AST
 // gamma: the set of known mappings from identifiers to type assignments. Object, treat like dictionary
 // nonGenerics: set of non-generic variables
-function AlgorithmW(node, gamma, nonGenerics = []) {
+function AlgorithmW(node, gamma, nonGenerics) {
+    if (!gamma) {
+        gamma = {};
+    }
+
+    if (!nonGenerics) {
+        nonGenerics = new Set()
+    }
     if (node instanceof Identifier) {
         return getType(node.name, gamma, nonGenerics);
     } 
-    else if (node.instanceof(FunctionCall)) {
+    else if (node instanceof FunctionCall) {
         let signatureTypes = [];
         // Get the type of the node's function
-        const fcnType = AlgorithmW(node.fcn, gamma, nonGenerics);
+        let fcnType = AlgorithmW(node.fcn, gamma, nonGenerics);
         // Get the type of each of the arguments to the function
-        node.args.forEach(arg => {
-            signatureTypes.push(AlgorithmW(arg, gamma, nonGenerics));
-        });
+        if (node.args.length) {
+            node.args.forEach(arg => {
+                signatureTypes.push(AlgorithmW(arg, gamma, nonGenerics));
+            });
+        }
         // Stick a type variable at the end for the return type
         // Note the use of var here: unify will update fcnType
-        var fcnType = new Variable();
+        fcnType = new Variable();
         signatureTypes.push(fcnType);
         unify(new Function(signatureTypes), fcnType);
         return fcnType;
     }
-    else if (node instanceof Function) {
+    else if (node instanceof FunctionDefinition) {
         // Note that Smallshire uses copies of gamma and nonGenerics here
         // and I'm not sure why. Suspect scoping issues, which do not apply
         // if we're using var.
         // We're going to copy nonGeneric since I suspect it may have scoping issues.
         // If it breaks, reconsider
-        let newNonG = nonGenerics.slice();
+        let newNonG = new Set(nonGenerics);
         // If we want to parse let and const, we may want to copy gamma too
         // let delta = {...gamma};
         let signatureTypes = [];
 
         // To handle multiple args we need to loop through the array
         // Smallshire only directly accounts for a -> b type functions.
-        node.args.forEach(arg => {
-            argType = new Variable();
-            newNonG.push(argType);
-            gamma[arg.v] = argType;
-            signatureTypes.push(argType);
-        });
+        console.log('In FunctionDefinition check, node.body is ' + node.body.toString() + ' which has length ' 
+            + node.body.length + ' and node.body.v = ' + node.body.v);
+        if (node.body.length) {
+            node.body.forEach(arg => {
+                argType = new Variable();
+                newNonG.push(argType);
+                gamma[arg.v] = argType;
+                signatureTypes.push(argType);
+            });
+        } else {
+            // argType = new Variable();
+            // newNonG.push(argType);
+            // gamma[node.body.v] = argType;
+            // signatureTypes.push(argType);
+        }
         resultType = AlgorithmW(node.body, gamma /*delta*/, newNonG);
         signatureTypes.push(resultType);
         // Do we need to update gamma with this new Function?
@@ -266,7 +285,8 @@ function AlgorithmW(node, gamma, nonGenerics = []) {
     else if (node instanceof Let) {
         let defnType = AlgorithmW(node.defn, gamma, nonGenerics);
         // Another place we may need to copy gamma
-        // let delta = {...gamma};
+        //let delta = {...gamma};
+        //delta[node.v] = defnType;
         gamma[node.v] = defnType;
         return AlgorithmW(node.body, gamma /*delta*/, nonGenerics);
     }
@@ -322,7 +342,7 @@ function occursInTypeArray(typeA,typeArray) {
         // Watch this for mutual recursion
         return occursInType(typeA, typeB);
     });
-    return hasTypeA.include(typeA);
+    return hasTypeA.some( x => x);
 }
 
 // Check to see if type variable v occurs in typeB
@@ -402,13 +422,17 @@ function getType(name, gamma, nonGenerics) {
     if (gamma[name]) {
         return fresh(gamma[name], nonGenerics);
     }
-    switch (type.name) {
-        case 'Boolean':
-            return new Boolean();
-        case 'Number':
-            return new Number();
-        case 'String':
-            return new String();
-    }
+    if (!isNaN(name)) {
+        return new Number();
+    } else if (name == 'false' || name == 'true') {
+        return new Boolean();
+    } else {return new Str()}
 }
+
+
+let x = new Identifier("5");
+console.log(AlgorithmW(x), {});
+
+x = new FunctionDefinition("f", new FunctionDefinition("g", new FunctionDefinition("arg", new FunctionCall(new Identifier("g"), new FunctionCall(new Identifier("f"), new Identifier("arg"))))))
+console.log(AlgorithmW(x), {});
 
