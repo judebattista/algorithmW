@@ -272,6 +272,14 @@ class Function extends Type {
 // gamma: the set of known mappings from identifiers to type assignments. Object, treat like dictionary
 // nonGenerics: set of non-generic variables
 function AlgorithmW(node, gamma, nonGenerics = []) {
+    if (!gamma) {
+        gamma = {};
+    }
+
+    if (!nonGenerics) {
+        nonGenerics = new Set()
+    }
+
     if (node instanceof Identifier) {
         return getType(node.name, gamma, nonGenerics);
     } 
@@ -481,6 +489,10 @@ function prune(typeA) {
     return typeA;
 }
 
+function isNum(x) {
+    return !isNaN(x);
+}
+
 // Not a huge fan of this name
 function getType(name, gamma, nonGenerics) {
     // debugger;
@@ -488,16 +500,14 @@ function getType(name, gamma, nonGenerics) {
     if (gamma[name]) {
         return fresh(gamma[name], nonGenerics);
     }
-    switch (name) {
-        case 'Boolean':
-            return new Boolean();
-        case 'Number':
-            return new Number();
-        case 'String':
-            return new String();
-        default:
-            //TOTALLY WRONG.
-            return new String();
+    if (name === "true") {
+        return new Boolean();
+    } else if (name === "false") {
+        return new Boolean();
+    } else if (isNum(name)) {
+        return new Number();
+    } else {
+        return new Str();
     }
 }
 
@@ -527,14 +537,14 @@ var var2 = new Variable();
 //Lambda("f", Lambda("g", Lambda("arg", Apply(Identifier("g"), Apply(Identifier("f"), Identifier("arg"))))))
 // fn f (fn g (fn arg (f g arg)))
 //  ((b -> c) -> ((c -> d) -> (b -> d)))
-var f = new FunctionDefinition("f", [new FunctionDefinition("g", [new FunctionDefinition("arg", [new Apply(new Identifier("g"), new Apply(new Identifier("f"), new Identifier("arg")))])])]);
+// var f = new FunctionDefinition("f", [new FunctionDefinition("g", [new FunctionDefinition("arg", [new Apply(new Identifier("g"), new Apply(new Identifier("f"), new Identifier("arg")))])])]);
 
-var t = AlgorithmW(f, {});
-console.log(t);
-console.log(t.toString());
-console.log(t);
-
-
+// var t = AlgorithmW(f, {});
+// console.log(t);
+// console.log(t.toString());
+// console.log(t);
+var x = AlgorithmW(new FunctionDefinition("x", [new Identifier("x")]));
+console.log(x.toString());
 //  # let g = fn f => 5 in g g
 // Let("g",
 // Lambda("f", Identifier("5")),
