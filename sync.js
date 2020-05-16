@@ -144,14 +144,14 @@ class Apply {
 // Automatically assigned an ID, but not given a name until necessary
 
 
-function getName(potentialName) {
+function getName(potentialName, id) {
     if (potentialName === null) {
         // This is a clever bit of code from https://stackoverflow.com/questions/12504042/what-is-a-method-that-can-be-used-to-increment-letters
         // I do hope we don't have more than 26 variables though...
         // A possible solution is construct two character strings.
-        let s = Variable.base_variable_name.charCodeAt(0) + this.id;
-        console.log(s);
-        return "'" + String.fromCharCode(s);
+        let s = Variable.base_variable_name.charCodeAt(0) + id;
+        let string_num = String.fromCharCode(s);
+        return "'" + string_num;
     } else {
         return potentialName;
     }
@@ -194,10 +194,8 @@ class Variable {
     toString() {
         if (this.instance === null)
         { 
-            return getName(this.name);
+            return getName(this.name, this.id);
         }
-        console.log("AHAHAAHAHA");
-        console.log(this.instance.toString());
         return this.instance.toString();
     }
 }
@@ -218,14 +216,18 @@ class Type {
         var typeCount = this.types.length;
         let typeStrings = '';
         // If we have types in the array, we want to convert each of them to a string 
-        if (this.typeCount === 0)
+        if (typeCount === 0)
         {
-            return this.name
+            return this.name;
+        } else if (typeCount === 2) {
+            return this.types[0].toString() + this.name + this.types[1].toString();
+        } else {
+        // // Map toString over our types array, then join them with separating spaces
+        // typeStrings = this.types.map(type => type.toString()).join(' ');
+        // // Join the resulting strings with a separating space.
+        return "what";
         }
-        // Map toString over our types array, then join them with separating spaces
-        typeStrings = this.types.map(type => type.toString()).join(' ');
-        // Join the resulting strings with a separating space.
-        return this.name + ' ' + typeStrings; 
+        
     }
 
     debugDescription() {
@@ -246,7 +248,7 @@ class Number extends Type {
     }
 }
 
-class String extends Type {
+class Str extends Type {
     constructor() {
         super("String", []);
     }
@@ -259,11 +261,8 @@ class String extends Type {
 // a single input type and a single output type.
 // We can then chain these functions to achieve multiple input types
 class Function extends Type {
-    constructor(name, types) {
-        if (name == "") {
-            name = "Function"
-        }
-        super(name, types);
+    constructor(types) {
+        super(" -> ", types);
     }
 }
 
@@ -273,53 +272,53 @@ class Function extends Type {
 // gamma: the set of known mappings from identifiers to type assignments. Object, treat like dictionary
 // nonGenerics: set of non-generic variables
 function AlgorithmW(node, gamma, nonGenerics = []) {
-    // debugger;
     if (node instanceof Identifier) {
-        // debugger;
         return getType(node.name, gamma, nonGenerics);
     } 
-    else if (node instanceof FunctionCall) {
-        let signatureTypes = [];
-        // Get the type of the node's function
-       // fcnType = AlgorithmW(node.fcn, gamma, nonGenerics);
-        // Get the type of each of the arguments to the function
-        node.args.forEach(arg => {
-            signatureTypes.push(AlgorithmW(arg, gamma, nonGenerics));
-        });
-        // Stick a type variable at the end for the return type
-        // Note the use of var here: unify will update fcnType
-        var fcnType = new Variable();
-        signatureTypes.push(fcnType);
-        unify(new Function("function", signatureTypes), fcnType);
-        return fcnType;
-    }
-    else if (node instanceof Function) {
-        // Note that Smallshire uses copies of gamma and nonGenerics here
-        // and I'm not sure why. Suspect scoping issues, which do not apply
-        // if we're using var.
-        // We're going to copy nonGeneric since I suspect it may have scoping issues.
-        // If it breaks, reconsider
-        let newNonG = nonGenerics.slice();
-        // If we want to parse let and const, we may want to copy gamma too
-        // let delta = {...gamma};
-        let signatureTypes = [];
+    // else if (node instanceof FunctionCall) {
+    //     let signatureTypes = [];
+    //     // Get the type of the node's function
+    //    // fcnType = AlgorithmW(node.fcn, gamma, nonGenerics);
+    //     // Get the type of each of the arguments to the function
+    //     node.args.forEach(arg => {
+    //         signatureTypes.push(AlgorithmW(arg, gamma, nonGenerics));
+    //     });
+    //     // Stick a type variable at the end for the return type
+    //     // Note the use of var here: unify will update fcnType
+    //     var fcnType = new Variable();
+    //     signatureTypes.push(fcnType);
+    //     unify(new Function(signatureTypes), fcnType);
+    //     return fcnType;
+    // }
+    // else if (node instanceof FunctionDefinition) {
+    //     debugger;
+    //     // Note that Smallshire uses copies of gamma and nonGenerics here
+    //     // and I'm not sure why. Suspect scoping issues, which do not apply
+    //     // if we're using var.
+    //     // We're going to copy nonGeneric since I suspect it may have scoping issues.
+    //     // If it breaks, reconsider
+    //     let newNonG = nonGenerics.slice();
+    //     // If we want to parse let and const, we may want to copy gamma too
+    //     // let delta = {...gamma};
+    //     let signatureTypes = [];
 
-        // To handle multiple args we need to loop through the array
-        // Smallshire only directly accounts for a -> b type functions.
-        node.types.forEach(arg => {
-            argType = new Variable();
-            newNonG.push(argType);
-            gamma[arg.v] = argType;
-            signatureTypes.push(argType);
-        });
-        resultType = AlgorithmW(node.types, gamma /*delta*/, newNonG);
-        signatureTypes.push(resultType);
-        // Do we need to update gamma with this new Function?
-        // resultFcn = new Function(signatureTypes);
-        // gamma[node.v] = resultFcn;
-        // return resultFcn;
-        return new Function("Function", signatureTypes);
-    }
+    //     // To handle multiple args we need to loop through the array
+    //     // Smallshire only directly accounts for a -> b type functions.
+    //     node.body.forEach(arg => {
+    //         console.log("hello-WOORLD!");
+    //         argType = new Variable();
+    //         newNonG.push(argType);
+    //         gamma[arg.v] = argType;
+    //         signatureTypes.push(argType);
+    //     });
+    //     resultType = AlgorithmW(node.types, gamma /*delta*/, newNonG);
+    //     signatureTypes.push(resultType);
+    //     // Do we need to update gamma with this new Function?
+    //     // resultFcn = new Function(signatureTypes);
+    //     // gamma[node.v] = resultFcn;
+    //     // return resultFcn;
+    //     return new Function(signatureTypes);
+    // }
     else if (node instanceof Let) {
         let defnType = AlgorithmW(node.defn, gamma, nonGenerics);
         // Another place we may need to copy gamma
@@ -336,19 +335,23 @@ function AlgorithmW(node, gamma, nonGenerics = []) {
         let fun_type = AlgorithmW(node.fn, gamma, nonGenerics);
         let arg_type = AlgorithmW(node.arg, gamma, nonGenerics);
         var result_type = new Variable();
-        unify(new Function("Function", [fun_type, result_type]), fun_type);
-
+        unify(new Function([arg_type, result_type]), fun_type);
+        console.log("unify");
+        console.log(result_type.instance);
         return result_type;
     }
 
     else if (node instanceof FunctionDefinition) {
         var argumentType = new Variable();
-        newEnv = [...gamma];
+        var newEnv = {...gamma};
         newEnv[node.v] = argumentType;
-        new_non_generic = [...nonGenerics];
+        var new_non_generic = [...nonGenerics];
         new_non_generic.push(argumentType);
+        // console.log(newEnv);
         result_type = AlgorithmW(node.body[0], newEnv, new_non_generic);
-        return new Function("Functino00", [argumentType, result_type]);
+        console.log("FD");
+        console.log(result_type.instance);
+        return new Function([argumentType, result_type]);
     }
 }
 
@@ -425,10 +428,10 @@ function unify(typeA, typeB) {
             // Avoid endless recursive unification
             if(occursInType(typeA, typeB)) {
                 // Throw an exception here?
+                console.log("FAILURE2!");
                 return;
             }
             // Otherwise give typeA an instance of typeB
-            // debugger;
             typeA.instance = typeB;
         }
     }
@@ -444,6 +447,7 @@ function unify(typeA, typeB) {
         // check for a type mismatch:
         if (typeA.name !== typeB.name || typeA.types.length !== typeB.types.length) {
             // Throw an exception here?
+            console.log("FAILURE!4");
             return;
         }
         // Unify each of the types belonging to A and B
@@ -458,6 +462,10 @@ function unify(typeA, typeB) {
     else {
         // Failed to unify
         // throw exception?
+        console.log(typeA);
+        console.log(typeB);
+        console.log(typeA == typeB);
+        console.log("failure!!!");
         return;
     }
 }
@@ -520,7 +528,9 @@ var var2 = new Variable();
 // fn f (fn g (fn arg (f g arg)))
 //  ((b -> c) -> ((c -> d) -> (b -> d)))
 var f = new FunctionDefinition("f", [new FunctionDefinition("g", [new FunctionDefinition("arg", [new Apply(new Identifier("g"), new Apply(new Identifier("f"), new Identifier("arg")))])])]);
-var t = AlgorithmW(f, []);
+
+var t = AlgorithmW(f, {});
+console.log(t);
 console.log(t.toString());
 console.log(t);
 
