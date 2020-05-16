@@ -220,7 +220,7 @@ class Type {
         {
             return this.name;
         } else if (typeCount === 2) {
-            return this.types[0].toString() + this.name + this.types[1].toString();
+            return "(" + this.types[0].toString() + this.name + this.types[1].toString() + ")";
         } else {
         // // Map toString over our types array, then join them with separating spaces
         // typeStrings = this.types.map(type => type.toString()).join(' ');
@@ -277,56 +277,12 @@ function AlgorithmW(node, gamma, nonGenerics = []) {
     }
 
     if (!nonGenerics) {
-        nonGenerics = new Set()
+        nonGenerics = new Array()
     }
 
     if (node instanceof Identifier) {
         return getType(node.name, gamma, nonGenerics);
     } 
-    // else if (node instanceof FunctionCall) {
-    //     let signatureTypes = [];
-    //     // Get the type of the node's function
-    //    // fcnType = AlgorithmW(node.fcn, gamma, nonGenerics);
-    //     // Get the type of each of the arguments to the function
-    //     node.args.forEach(arg => {
-    //         signatureTypes.push(AlgorithmW(arg, gamma, nonGenerics));
-    //     });
-    //     // Stick a type variable at the end for the return type
-    //     // Note the use of var here: unify will update fcnType
-    //     var fcnType = new Variable();
-    //     signatureTypes.push(fcnType);
-    //     unify(new Function(signatureTypes), fcnType);
-    //     return fcnType;
-    // }
-    // else if (node instanceof FunctionDefinition) {
-    //     debugger;
-    //     // Note that Smallshire uses copies of gamma and nonGenerics here
-    //     // and I'm not sure why. Suspect scoping issues, which do not apply
-    //     // if we're using var.
-    //     // We're going to copy nonGeneric since I suspect it may have scoping issues.
-    //     // If it breaks, reconsider
-    //     let newNonG = nonGenerics.slice();
-    //     // If we want to parse let and const, we may want to copy gamma too
-    //     // let delta = {...gamma};
-    //     let signatureTypes = [];
-
-    //     // To handle multiple args we need to loop through the array
-    //     // Smallshire only directly accounts for a -> b type functions.
-    //     node.body.forEach(arg => {
-    //         console.log("hello-WOORLD!");
-    //         argType = new Variable();
-    //         newNonG.push(argType);
-    //         gamma[arg.v] = argType;
-    //         signatureTypes.push(argType);
-    //     });
-    //     resultType = AlgorithmW(node.types, gamma /*delta*/, newNonG);
-    //     signatureTypes.push(resultType);
-    //     // Do we need to update gamma with this new Function?
-    //     // resultFcn = new Function(signatureTypes);
-    //     // gamma[node.v] = resultFcn;
-    //     // return resultFcn;
-    //     return new Function(signatureTypes);
-    // }
     else if (node instanceof Let) {
         let defnType = AlgorithmW(node.defn, gamma, nonGenerics);
         // Another place we may need to copy gamma
@@ -383,7 +339,7 @@ function fresh(typeA, nonGenerics, mapping) {
             if (!mapping[prunedType.id]) {
                 mapping[prunedType.id] = new Variable();
             }
-            return mapping[prunedType.id]
+            return mapping[prunedType.id];
         }
         // if A is not generic
         else {
@@ -409,7 +365,7 @@ function occursInTypeArray(typeA,typeArray) {
         // Watch this for mutual recursion
         return occursInType(typeA, typeB);
     });
-    return hasTypeA.includes(typeA);
+    return hasTypeA.includes(true);
 }
 
 // Check to see if type variable v occurs in typeB
@@ -537,13 +493,15 @@ var var2 = new Variable();
 //Lambda("f", Lambda("g", Lambda("arg", Apply(Identifier("g"), Apply(Identifier("f"), Identifier("arg"))))))
 // fn f (fn g (fn arg (f g arg)))
 //  ((b -> c) -> ((c -> d) -> (b -> d)))
-// var f = new FunctionDefinition("f", [new FunctionDefinition("g", [new FunctionDefinition("arg", [new Apply(new Identifier("g"), new Apply(new Identifier("f"), new Identifier("arg")))])])]);
+
 
 // var t = AlgorithmW(f, {});
 // console.log(t);
 // console.log(t.toString());
 // console.log(t);
-var x = AlgorithmW(new FunctionDefinition("x", [new Identifier("x")]));
+// var x = AlgorithmW(new FunctionDefinition("x", [new Identifier("x")]));
+var f = new FunctionDefinition("f", [new FunctionDefinition("g", [new FunctionDefinition("arg", [new Apply(new Identifier("g"), new Apply(new Identifier("f"), new Identifier("arg")))])])]);
+var x = AlgorithmW(f);
 console.log(x.toString());
 //  # let g = fn f => 5 in g g
 // Let("g",
