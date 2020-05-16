@@ -448,18 +448,46 @@ function getType(name, gamma, nonGenerics) {
 }
 
 
-// var cliArgs = process.argv.slice();
-// if (cliArgs.length > 3) {
-//     console.log('Too many arguments! I know it\'s exciting, but try to restrict yourself to a single AST, submitted as a string');
-// } else {
-//     var x = eval(cliArgs[2]);
-//     console.log('Parsed the following from the command line: ' + x);
+// var esprima = require('esprima');
+// var program = `
+// const answer = 42;
+// function area(width, height) {
+//     return width * height;
 // }
-// x = new FunctionDefinition('num',new Identifier('42'))
-// console.log(AlgorithmW(x, {}).toString());
+// `;
+// var result1 = esprima.tokenize(program);
+// var result2 = esprima.parseScript(program);
+// console.log(result1);
+// console.log(result2);
+// console.log(result2.body);
 
-x = new Identifier('42');
-x = new FunctionDefinition("f", new FunctionDefinition("g", new FunctionDefinition("arg", 
-    new FunctionCall(Identifier("g"), new FunctionCall(Identifier("f"), Identifier("arg"))))))
+// var values = result2.body;
+// console.log(values[0].declarations);
 
-console.log(AlgorithmW(x, {}).toString());
+// Identifier("hello");
+// Let()
+//var algorithmW = require('./w.js');
+
+var var1 = new Variable();
+var var2 = new Variable();
+//Lambda("f", Lambda("g", Lambda("arg", FunctionCall(Identifier("g"), FunctionCall(Identifier("f"), Identifier("arg"))))))
+// fn f (fn g (fn arg (f g arg)))
+//  ((b -> c) -> ((c -> d) -> (b -> d)))
+
+
+// var t = AlgorithmW(f, {});
+// console.log(t);
+// console.log(t.toString());
+// console.log(t);
+// var x = AlgorithmW(new FunctionDefinition("x", [new Identifier("x")]));
+var f = new FunctionDefinition("f", [new FunctionDefinition("g", [new FunctionDefinition("arg", [new FunctionCall(new Identifier("g"), new FunctionCall(new Identifier("f"), new Identifier("arg")))])])]);
+var x = AlgorithmW(f, {});
+console.log(x.toString());
+//  # let g = fn f => 5 in g g
+// Let("g",
+// Lambda("f", Identifier("5")),
+// FunctionCall(Identifier("g"), Identifier("g"))),
+
+// var letExpr = new Let("g", Function())
+
+
