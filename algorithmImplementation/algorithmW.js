@@ -17,7 +17,7 @@
                         (http://lucacardelli.name/Papers/BasicTypechecking.pdf)
     In retrospect this turned into more of an adaptation of Smallshire's work.
                     
-    Written by Jude Battista for CS-370 (Programming Languages) at Whitworth University.
+    Written by Jude Battista and Ezekiel Pierson for CS-370 (Programming Languages) at Whitworth University.
 */
 
 /*
