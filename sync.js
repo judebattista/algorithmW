@@ -73,18 +73,6 @@ class FunctionDefinition {
     }
 }
 
-class FunctionCall {
-    constructor(fcn, args) {
-        this.fcn = fcn;
-        this.args = args;
-    }
-
-    get description() {
-        return this.fcn + " " + this.args;
-    }
-}
-
-
 class Let {
     constructor(v, defn, body) {
         this.v = v;
@@ -107,7 +95,7 @@ class Identifier {
 }
 
 // Function Application
-class Apply {
+class FunctionCall {
     constructor(fn, arg) {
         this.fn = fn;
         this.arg = arg;
@@ -295,13 +283,11 @@ function AlgorithmW(node, gamma, nonGenerics = []) {
         return convertNodeToPrimitiveType(node);
     }
 
-    else if (node instanceof Apply) {
+    else if (node instanceof FunctionCall) {
         let fun_type = AlgorithmW(node.fn, gamma, nonGenerics);
         let arg_type = AlgorithmW(node.arg, gamma, nonGenerics);
         var result_type = new Variable();
         unify(new Function([arg_type, result_type]), fun_type);
-        console.log("unify");
-        console.log(result_type.instance);
         return result_type;
     }
 
@@ -311,10 +297,7 @@ function AlgorithmW(node, gamma, nonGenerics = []) {
         newEnv[node.v] = argumentType;
         var new_non_generic = [...nonGenerics];
         new_non_generic.push(argumentType);
-        // console.log(newEnv);
         result_type = AlgorithmW(node.body[0], newEnv, new_non_generic);
-        console.log("FD");
-        console.log(result_type.instance);
         return new Function([argumentType, result_type]);
     }
 }
@@ -426,9 +409,6 @@ function unify(typeA, typeB) {
     else {
         // Failed to unify
         // throw exception?
-        console.log(typeA);
-        console.log(typeB);
-        console.log(typeA == typeB);
         console.log("failure!!!");
         return;
     }
@@ -490,7 +470,7 @@ function getType(name, gamma, nonGenerics) {
 
 var var1 = new Variable();
 var var2 = new Variable();
-//Lambda("f", Lambda("g", Lambda("arg", Apply(Identifier("g"), Apply(Identifier("f"), Identifier("arg"))))))
+//Lambda("f", Lambda("g", Lambda("arg", FunctionCall(Identifier("g"), FunctionCall(Identifier("f"), Identifier("arg"))))))
 // fn f (fn g (fn arg (f g arg)))
 //  ((b -> c) -> ((c -> d) -> (b -> d)))
 
@@ -500,13 +480,13 @@ var var2 = new Variable();
 // console.log(t.toString());
 // console.log(t);
 // var x = AlgorithmW(new FunctionDefinition("x", [new Identifier("x")]));
-var f = new FunctionDefinition("f", [new FunctionDefinition("g", [new FunctionDefinition("arg", [new Apply(new Identifier("g"), new Apply(new Identifier("f"), new Identifier("arg")))])])]);
+var f = new FunctionDefinition("f", [new FunctionDefinition("g", [new FunctionDefinition("arg", [new FunctionCall(new Identifier("g"), new FunctionCall(new Identifier("f"), new Identifier("arg")))])])]);
 var x = AlgorithmW(f);
 console.log(x.toString());
 //  # let g = fn f => 5 in g g
 // Let("g",
 // Lambda("f", Identifier("5")),
-// Apply(Identifier("g"), Identifier("g"))),
+// FunctionCall(Identifier("g"), Identifier("g"))),
 
 // var letExpr = new Let("g", Function())
 
