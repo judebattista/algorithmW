@@ -37,14 +37,14 @@ const parseObject = (entry) => {
         switch (key) {
             case "type":
                 if (values[iterator] === "FunctionDeclaration") {
-                    tokens.push("new Lambda('");
+                    tokens.push("new FunctionDefinition('");
                 }
                 else if (values[iterator] === "ReturnStatement") {
                     tokens.push("new Identifier('");
                 }
                 break;
             case "id":
-                if (tokens[tokens.length - 1] === "new Lambda('")
+                if (tokens[tokens.length - 1] === "new FunctionDefinition('")
                     tokens.push(values[iterator].name + "',");
                 break;
             case "body":
@@ -57,40 +57,6 @@ const parseObject = (entry) => {
                 tokens.push(values[iterator].value + "'))");
                 break;
         }
-        // general cases for parsing js 
-        // switch (key) {
-        //     case "type": 
-        //         if (values[iterator] === "FunctionDeclaration") {
-        //             tokens.push("fn");
-        //         } else if (values[iterator] === "CallExpression") {
-        //             tokens.push("call");
-        //         }
-        //         break; 
-        //     case "id":
-        //         if (tokens[tokens.length-1] === "fn") tokens.push(values[iterator].name);
-        //         break; 
-        //     case "params": 
-        //         let params = values[iterator]; 
-        //         let paramInfo:string[] = [];
-        //         for (let i = 0; i < params.length; i++) {
-        //             if (params[i].name !== "func") {
-        //                 paramInfo.push(params[i].name);
-        //             }
-        //         }
-        //         tokens = tokens.concat(paramInfo); 
-        //         break; 
-        //     case "body":
-        //         let iterateOver:string[] = (values[iterator].length === undefined) ? [values[iterator]] : values[iterator];
-        //         for (let i = 0; i < iterateOver.length; i++) {
-        //             tokens = tokens.concat(parseObject(iterateOver[i]));
-        //         }
-        //     case "argument": 
-        //         for (let i = 0; i < values[iterator].arguments.length; i++) {
-        //             tokens = tokens.concat(parseObject(values[iterator].arguments[i]));
-        //         }
-        //     case "callee":
-        //         tokens = tokens.concat(parseObject(values[iterator]));
-        // }
         iterator++;
     });
     return tokens;
